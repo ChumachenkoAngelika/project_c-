@@ -1,0 +1,29 @@
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    double num1, num2;
+    char operation;
+
+    cout << "First: ";
+    cin >> num1;
+
+    cout << " (+ or -): ";
+    cin >> operation;
+
+    cout << "Second: ";
+    cin >> num2;
+
+    if (operation == '+') {
+        cout << num1 << " + " << num2 << " = " << num1 + num2 << endl;
+    } 
+    else if (operation == '-') {
+        cout << num1 << " - " << num2 << " = " << num1 - num2 << endl;
+    } 
+    else {
+        cout << "Error" << endl;
+    }
+
+    return 0;
+}
