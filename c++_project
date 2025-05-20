@@ -87,3 +87,199 @@ struct DateRange {
 };
 // Определяем перечисление дней недели
 enum class DayOfWeek { MON, TUE, WED, THU, FRI, SAT, SUN };
+
+// Предварительные объявления классов 
+// Необходимы для разрешения циклических зависимостей между классами
+class Subject;    // Класс учебного предмета
+class Student;    // Класс студента
+class Teacher;    // Класс преподавателя
+class Assignment; // Класс учебного задания
+
+// Реализация класса Группа
+class Group {
+private:
+    string groupCode;       // Уникальный код группы 
+    string curator;         // ФИО куратора
+    vector<Student*> students; // Список указателей на студентов в группе
+
+public:
+    // Конструктор класса Group
+    Group(string code, string cur) : groupCode(code), curator(cur) {}
+    
+    // Метод добавления студента в группу
+    bool addStudent(Student* student) {
+        students.push_back(student); // Добавляем указатель на студента в вектор
+        return true; // Всегда возвращаем true (в реальной системе нужна проверка)
+    }
+    
+    // Метод генерации отчета об успеваемости группы
+    PerformanceReport getPerformanceReport() {
+        PerformanceReport report; // Создаем объект отчета
+        double total = 0.0;       // Сумма всех оценок
+        int count = 0;            // Количество оценок
+        
+        // Итерация по всем студентам группы
+        for (auto student : students) {
+            auto grades = student->viewGrades(); // Получаем оценки студента
+            // Итерация по предметам и оценкам
+            for (auto& [subject, gradeVec] : grades) {
+                for (auto& grade : gradeVec) {
+                    total += grade.value; // Суммируем значения оценок
+                    count++;             // Увеличиваем счетчик
+                }
+            }
+        }
+        
+        // Расчет среднего балла (защита от деления на 0)
+        report.averageScore = count > 0 ? total / count : 0.0;
+        return report; // Возвращаем заполненный отчет
+    }
+    
+    // Геттеры для приватных полей
+    string getGroupCode() const { return groupCode; }
+    string getCurator() const { return curator; }
+};
+
+// Класс Расписание
+class Schedule {
+private:
+    string semester;       // Семестр 
+    vector<string> classrooms; // Список аудиторий
+    // Карта расписания: день недели → вектор (предмет, временной слот, аудитория)
+    map<DayOfWeek, vector<tuple<Subject*, TimeSlot, string>>> schedule;
+
+public:
+    // Конструктор
+    Schedule(string sem) : semester(sem) {}
+    
+    // Метод добавления занятия в расписание
+    bool addClass(Subject* subject, DayOfWeek day, TimeSlot time, string classroom) {
+        // Добавляем кортеж (предмет, время, аудитория) в расписание
+        schedule[day].emplace_back(subject, time, classroom);
+        classrooms.push_back(classroom); // Добавляем аудиторию в общий список
+        return true;
+    }
+    
+    // Метод обновления расписания
+    bool updateSchedule(ScheduleChange change) {
+        // Заглушка - в реальной системе здесь была бы логика изменений
+        return true;
+    }
+    
+    // Геттер для семестра
+    string getSemester() const { return semester; }
+};
+
+// Класс Академическая задолженность
+class AcademicDebt {
+private:
+    string reason;     // Причина задолженности
+    Date dateCreated;  // Дата создания записи о задолженности
+
+public:
+    // Конструктор
+    AcademicDebt(string r, Date d) : reason(r), dateCreated(d) {}
+    
+    // Метод уведомления студента
+    bool notifyStudent() {
+        // Выводим сообщение в консоль (в реальной системе - email/уведомление)
+        cout << "Уведомление отправлено студенту о задолженности: " << reason << endl;
+        return true;
+    }
+    
+    // Метод блокировки доступа
+    bool blockAccess() {
+        // Выводим сообщение 
+        cout << "Доступ заблокирован из-за задолженности: " << reason << endl;
+        return true;
+    }
+    
+    // Геттеры
+    string getReason() const { return reason; }
+    Date getDateCreated() const { return dateCreated; }
+};
+
+// Класс Учебное задание
+class Assignment {
+private:
+    string description;  // Описание задания
+    Date deadline;      // Срок выполнения
+    int maxScore;       // Максимальный балл
+    // Словарь сданных работ (студент → работа)
+    map<Student*, Work> submissions;
+    // Словарь оценок (студент → оценка)
+    map<Student*, Grade> grades;
+
+public:
+    // Конструктор
+    Assignment(string desc, Date dl, int max) : 
+        description(desc), deadline(dl), maxScore(max) {}
+    
+    // Метод сдачи работы студентом
+    bool submit(Student* student, Work work) {
+        submissions[student] = work; // Добавляем работу в словарь
+        return true;
+    }
+    
+    // Метод оценки работы преподавателем
+    Grade evaluate(Teacher* teacher, Student* student) {
+        // Генерация случайной оценки (в реальной системе - оценка преподавателя)
+        Grade grade(rand() % maxScore + 1, "Оценено автоматически");
+        grades[student] = grade; // Сохраняем оценку
+        return grade;
+    }
+    
+    // Геттеры
+    string getDescription() const { return description; }
+    Date getDeadline() const { return deadline; }
+    int getMaxScore() const { return maxScore; }
+};
+
+// Класс Студент
+class Student {
+private:
+    string fullName;          // Полное имя студента
+    string recordBookNumber;  // Номер зачетной книжки
+    // Словарь оценок (предмет → вектор оценок)
+    map<Subject*, vector<Grade>> grades;
+    vector<AcademicDebt*> debts; // Вектор задолженностей
+    Group* group;            // Указатель на группу
+
+public:
+    // Конструктор
+    Student(string name, string recordBook) : 
+        fullName(name), recordBookNumber(recordBook), group(nullptr) {}
+    
+    // Метод сдачи задания
+    bool submitWork(Assignment* assignment) {
+        // Создаем тестовую работу (в реальной системе - данные из формы)
+        Work work("Выполненная работа", Date(1, 1, 2023));
+        return assignment->submit(this, work); // Вызываем метод submit у задания
+    }
+    
+    // Метод получения всех оценок
+    map<Subject*, vector<Grade>> viewGrades() {
+        return grades; // Возвращаем копию словаря с оценками
+    }
+    
+    // Метод добавления оценки
+    void addGrade(Subject* subject, Grade grade) {
+        grades[subject].push_back(grade); // Добавляем оценку в вектор по предмету
+    }
+    
+    // Метод добавления задолженности
+    void addDebt(AcademicDebt* debt) {
+        debts.push_back(debt); // Добавляем указатель в вектор
+    }
+    
+    // Метод прикрепления к группе
+    void setGroup(Group* grp) {
+        group = grp; // Устанавливаем указатель на группу
+    }
+    
+    // Геттеры
+    string getFullName() const { return fullName; }
+    string getRecordBookNumber() const { return recordBookNumber; }
+    Group* getGroup() const { return group; }
+};
+
