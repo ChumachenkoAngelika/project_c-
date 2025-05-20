@@ -1,29 +1,89 @@
 #include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <ctime>
 
 using namespace std;
 
-int main() {
-    double num1, num2;
-    char operation;
+// Вспомогательные структуры
 
-    cout << "First: ";
-    cin >> num1;
+struct Date {
+//Хранит информацию о дате (день, месяц, год), которая используется в разных частях системы:
+//Сроки сдачи заданий (Assignment::deadline)
+//Даты экзаменов (Subject::scheduleExam())
+//Даты создания задолженностей (AcademicDebt::dateCreated)
+//Периоды отчетов (FacultyReport, MinistryReport)
 
-    cout << " (+ or -): ";
-    cin >> operation;
+    int day, month, year;
+    
+    Date(int d, int m, int y) : day(d), month(m), year(y) {}
+};
 
-    cout << "Second: ";
-    cin >> num2;
 
-    if (operation == '+') {
-        cout << num1 << " + " << num2 << " = " << num1 + num2 << endl;
-    } 
-    else if (operation == '-') {
-        cout << num1 << " - " << num2 << " = " << num1 - num2 << endl;
-    } 
-    else {
-        cout << "Error" << endl;
-    }
+struct TimeSlot {
+    //Хранит время начала и конца занятия, чтобы:
+//Составлять расписание (Schedule::addClass())
+//Проверять пересечение пар, чтобы не было двух пар в одной аудитории
+//Формировать расписание 
+    int startHour, startMinute;
+    int endHour, endMinute;
+    
+    TimeSlot(int sh, int sm, int eh, int em) : 
+        startHour(sh), startMinute(sm), endHour(eh), endMinute(em) {}
+};
+// Определяем перечисление типов предметов - лекции, практики и тд
+enum class SubjectType { LECTURE, PRACTICE, LABORATORY, EXAM, CREDIT, COURSEWORK };
+// Структура для хранения оценки
+struct Grade {
+    int value;
+    string comment; // Комментарий к оценке
+    
+    Grade(int v = 0, string c = "") : value(v), comment(c) {}
+};
+// Структура для представления задания
+struct Work {
+    string content; // Содержание задания
+    Date submissionDate; // Дата сдачи задания
 
-    return 0;
-}
+    Work(string cnt, Date date) : content(cnt), submissionDate(date) {}
+};
+// Структура для отчета об успеваемости
+struct PerformanceReport {
+    map<string, vector<Grade>> studentGrades; // Оценки студентов (имя -> вектор оценок)
+    double averageScore;
+    // Средний балл по всем оценкам
+    PerformanceReport() : averageScore(0.0) {}
+};
+// Структура для хранения изменений в расписании
+struct ScheduleChange {
+    string changeDetails; // Детали изменения расписания
+    Date changeDate; // Дата изменения
+    ScheduleChange(string details, Date date) : changeDetails(details), changeDate(date) {}
+};
+// Структура для отчета факультета
+struct FacultyReport {
+    string facultyName; // Название факультета
+    string reportContent; // Содержимое отчета факультета
+    Date generationDate; // Дата генерации отчета
+    
+    FacultyReport(string name, string content, Date date) : 
+        facultyName(name), reportContent(content), generationDate(date) {}
+};
+// Структура для отчета министерства
+struct MinistryReport {
+    string instituteName; // Название учебного заведения
+    string reportContent; // Содержимое отчета
+    int year; // Год отчета
+    MinistryReport(string name, string content, int y) : 
+        instituteName(name), reportContent(content), year(y) {}
+};
+// Структура для диапазона дат
+struct DateRange {
+    Date start;
+    Date end;
+    
+    DateRange(Date s, Date e) : start(s), end(e) {}
+};
+// Определяем перечисление дней недели
+enum class DayOfWeek { MON, TUE, WED, THU, FRI, SAT, SUN };
