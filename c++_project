@@ -283,3 +283,197 @@ public:
     Group* getGroup() const { return group; }
 };
 
+// Класс Факультет
+class Faculty {
+private:
+    string name;            // Название факультета
+    vector<Group*> groups;  // Вектор групп на факультете
+    vector<Curriculum*> curricula; // Вектор учебных планов
+
+public:
+    // Конструктор
+    Faculty(string n) : name(n) {}
+    
+    // Метод утверждения учебного плана
+    bool approveCurriculum(Curriculum* curriculum) {
+        curricula.push_back(curriculum); // Добавляем план в вектор
+        return true;
+    }
+    
+    // Метод генерации отчета
+    FacultyReport generateReport(DateRange range) {
+        // Формируем строку с периодом отчета
+        string content = "Отчет факультета " + name + " за период с " + 
+                        to_string(range.start.day) + "." + to_string(range.start.month) + "." + to_string(range.start.year) + 
+                        " по " + to_string(range.end.day) + "." + to_string(range.end.month) + "." + to_string(range.end.year);
+        
+        // Возвращаем объект отчета
+        return FacultyReport(name, content, range.end);
+    }
+    
+    // Метод добавления группы
+    void addGroup(Group* group) {
+        groups.push_back(group); // Добавляем указатель в вектор
+    }
+    
+    // Геттер названия факультета
+    string getName() const { return name; }
+};
+
+
+class Teacher {
+private:
+    string fullName;
+    string position;
+    vector<Subject*> subjects;
+
+public:
+    Teacher(string name, string pos) : fullName(name), position(pos) {}
+    
+    Assignment* createAssignment(Subject* subject, string description, Date deadline) {
+        Assignment* assignment = new Assignment(description, deadline, 100);
+        subject->addAssignment(assignment);
+        return assignment;
+    }
+    
+    Grade gradeWork(Assignment* assignment, Student* student, int score) {
+        Grade grade(score, "Оценено преподавателем " + fullName);
+        assignment->evaluate(this, student);
+        student->addGrade(nullptr, grade); // В реальной системе subject был бы известен
+        return grade;
+    }
+    
+    void addSubject(Subject* subject) {
+        subjects.push_back(subject);
+    }
+    
+    string getFullName() const { return fullName; }
+    string getPosition() const { return position; }
+};
+
+class Institute {
+private:
+    string name;
+    string director;
+    vector<Faculty*> faculties;
+
+public:
+    Institute(string n, string dir) : name(n), director(dir) {}
+    
+    vector<Faculty*> manageFaculties() {
+        return faculties;
+    }
+    
+    MinistryReport submitMinistryReport(int year) {
+        string content = "Годовой отчет института " + name + " за " + to_string(year) + " год";
+        return MinistryReport(name, content, year);
+    }
+    
+    void addFaculty(Faculty* faculty) {
+        faculties.push_back(faculty);
+    }
+    
+    string getName() const { return name; }
+    string getDirector() const { return director; }
+};
+
+class Curriculum {
+private:
+    string academicYear;
+    int requiredCredits;
+    vector<pair<Subject*, int>> subjects;
+
+public:
+    Curriculum(string year, int credits) : academicYear(year), requiredCredits(credits) {}
+    
+    bool addSubject(Subject* subject, int credits) {
+        subjects.emplace_back(subject, credits);
+        return true;
+    }
+    
+    bool approveChanges(Teacher* teacher) {
+        // В реальной системе здесь была бы проверка прав преподавателя
+        return true;
+    }
+    
+    string getAcademicYear() const { return academicYear; }
+    int getRequiredCredits() const { return requiredCredits; }
+};
+
+class Subject {
+private:
+    string name;
+    SubjectType type;
+    vector<Assignment*> assignments;
+    vector<Date> exams;
+
+public:
+    Subject(string n, SubjectType t) : name(n), type(t) {}
+    
+    Assignment* addAssignment(string description, Date deadline) {
+        Assignment* assignment = new Assignment(description, deadline, 100);
+        assignments.push_back(assignment);
+        return assignment;
+    }
+    
+    bool scheduleExam(Date examDate) {
+        exams.push_back(examDate);
+        return true;
+    }
+    
+    void addAssignment(Assignment* assignment) {
+        assignments.push_back(assignment);
+    }
+    
+    string getName() const { return name; }
+    SubjectType getType() const { return type; }
+};
+
+int main() {
+    // Инициализация данных
+    Institute institute("Институт компьютерных наук", "Иванов И.И.");
+    
+    Faculty faculty("Факультет программной инженерии");
+    institute.addFaculty(&faculty);
+    
+    Teacher teacher("Петров П.П.", "Доцент");
+    
+    Curriculum curriculum("2023-2024", 180);
+    faculty.approveCurriculum(&curriculum);
+    
+    Subject programming("Программирование", SubjectType::LECTURE);
+    Subject algorithms("Алгоритмы и структуры данных", SubjectType::PRACTICE);
+    curriculum.addSubject(&programming, 5);
+    curriculum.addSubject(&algorithms, 4);
+    
+    Group group("ПИ-101", "Сидоров С.С.");
+    faculty.addGroup(&group);
+    
+    Student student1("Иванов И.И.", "12345");
+    Student student2("Петрова А.А.", "12346");
+    group.addStudent(&student1);
+    group.addStudent(&student2);
+    student1.setGroup(&group);
+    student2.setGroup(&group);
+    
+    // Создание и выполнение задания
+    Assignment* labWork = teacher.createAssignment(&programming, "Лабораторная работа 1", Date(15, 10, 2023));
+    student1.submitWork(labWork);
+    
+    // Оценка работы
+    Grade grade = teacher.gradeWork(labWork, &student1, 95);
+    
+    // Генерация отчетов
+    PerformanceReport report = group.getPerformanceReport();
+    FacultyReport facultyReport = faculty.generateReport(DateRange(Date(1, 9, 2023), Date(31, 12, 2023)));
+    MinistryReport ministryReport = institute.submitMinistryReport(2023);
+    
+    // Вывод информации
+    cout << "Институт: " << institute.getName() << endl;
+    cout << "Факультет: " << faculty.getName() << endl;
+    cout << "Группа: " << group.getGroupCode() << endl;
+    cout << "Студент: " << student1.getFullName() << " получил оценку: " << grade.value << endl;
+    cout << "Средний балл группы: " << report.averageScore << endl;
+    
+    return 0;
+} 
