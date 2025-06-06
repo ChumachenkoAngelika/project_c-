@@ -7,6 +7,6 @@ bool Student::submitWork(Assignment* assignment) {
 }
 
 void Student::addGrade(Subject* subject, const Grade& grade) {
-    // В данном случае, в системе не привязано к предмету
+    
     grades[subject].push_back(grade);
 }
