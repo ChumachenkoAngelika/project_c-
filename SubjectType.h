@@ -1,0 +1,6 @@
+#ifndef SUBJECTTYPE_H
+#define SUBJECTTYPE_H
+
+enum class SubjectType { LECTURE, PRACTICE, LABORATORY, EXAM, CREDIT, COURSEWORK };
+
+#endif
